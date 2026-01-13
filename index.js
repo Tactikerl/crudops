@@ -1,8 +1,11 @@
 import fs from "fs";
 import jsonServer from "json-server";
 import dotenv from "dotenv";
+import packageJson from "./package.json" with {type: "json"};
 
 dotenv.config({ quiet: true });
+
+console.log(`Crudops versjon ${packageJson.version}\n\n`);
 
 if (!process.env.TEMPLATE) {
   console.error("Fatal feil: du må spesifisere en template som skal brukes som en miljøvariabel kalt TEMPLATE. Les dokumentasjonen for mer info.");
@@ -20,7 +23,7 @@ if (!fs.existsSync(`./templates/${process.env.TEMPLATE}`)) {
 }
 
 if (!fs.existsSync("./db.json")) {
-  console.log("Databasefilen finnes ikke — kopierer fra angitt template.");
+  console.log(`Databasefilen finnes ikke — kopierer fra angitt template.\n\n`);
   fs.copyFileSync(`./templates/${process.env.TEMPLATE}`, "./db.json");
 } 
 
@@ -31,6 +34,7 @@ const middlewares = jsonServer.defaults();
 server.use(middlewares);
 server.use(jsonServer.bodyParser);
 
+/* Autorisering: dersom method er noe annet enn GET må API-nøkkel være sendt med i header. */
 server.use((request, response, next) => {
   if (request.method === "GET") {
     next();
@@ -38,24 +42,24 @@ server.use((request, response, next) => {
     if (request.headers["authorization"] === `Bearer ${process.env.API_KEY}`) {
       next();
     } else {
-      console.log(request.headers);
-      response.status(401).json({message: "Unauthorized - did you remember to use your API key?"});
+      response.status(401).json({message: "Unauthorized - har du glemt API-nøkkel?"});
     }
   }
 });
 
 /* Middleware: dersom det er en POST-request, sett createdAt til riktig tid på server */
 server.use((request, response, next) => {
-  console.log(request.body);
   if (request.method === "POST") {
-    request.body.createdAt = new Date().toISOString();
+    const timestamp = new Date().toISOString()
+    request.body.createdAt = timestamp;
+    request.body.updatedAt = timestamp;
   }
   next();
 });
 
 /* Middleware: dersom det er en PUT- eller PATCH-request, sett updatedAt til riktig tid på server */
 server.use((request, response, next) => {
-  if (request.method === "PUT" || request.method === "PATCH") {
+  if (request.method === "PUT" || request.method === "PATCH" ) {
     request.body.updatedAt = new Date().toISOString();
   }
   next();
@@ -63,6 +67,7 @@ server.use((request, response, next) => {
 
 server.use(router);
 
-server.listen(3000, () => {
-  console.log(`Starter APIet med template: ${process.env.TEMPLATE} og API-nøkkel ${process.env.API_KEY}.`);
+const port = process.env.PORT ?? 3000;
+server.listen(port, () => {
+  console.log(`Starter APIet.\n\nPort: ${port}\nTemplate: ${process.env.TEMPLATE}\nAPI-nøkkel: ${process.env.API_KEY}.`);
 });
