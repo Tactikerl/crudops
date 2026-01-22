@@ -66,14 +66,14 @@ server.use((request, response, next) => {
 });
 
 /* Endepunkt: Dersom /reset kalles, skal databasen tilbakestilles. Overskriver innholdet i databasen med innholdet som ligger i template. */
-server.post("/reset", (request, response) => {
+server.post("/api/reset", (request, response) => {
   console.log("Reset av databasen forespurt — gjenoppretter fra template.");
   const resetData = JSON.parse(fs.readFileSync(`./templates/${process.env.TEMPLATE}`));
   router.db.setState(resetData);
   response.status(200).send();
 });
 
-server.use(router);
+server.use("/api", router);
 
 const port = process.env.PORT ?? 3000;
 server.listen(port, () => {
