@@ -12,7 +12,7 @@ if (!process.env.TEMPLATE) {
   console.error("Fatal feil: du må spesifisere en template som skal brukes som en miljøvariabel kalt TEMPLATE. Les dokumentasjonen for mer info.");
   process.exit(1);
 }
-
+/* Sjekker om API nøkkel er spesifisert i .env */
 if (!process.env.API_KEY) {
   console.error("Fatal feil: du må spesifisere en API-nøkkel som skal brukes som en miljøvariabel kalt API_KEY. Les dokumentasjonen for mer info.");
   process.exit(1);
